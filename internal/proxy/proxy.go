@@ -62,7 +62,7 @@ func NewServiceProxy(name, baseURL string) (*ServiceProxy, error) {
 	}, nil
 }
 
-// ServeHTTP implements http.Handler.
+// ServeHTTP implements http.Handler by forwarding the request to the backend service.
 func (s *ServiceProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
