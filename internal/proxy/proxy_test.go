@@ -82,7 +82,7 @@ func TestServiceProxy_BackendDown(t *testing.T) {
 }
 
 func TestServiceProxy_BackendNotFound(t *testing.T) {
-	frontend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	frontend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		_, _ = w.Write([]byte(`{"success":false,"error":{"code":"NOT_FOUND","message":"not found"}}`))
 	}))

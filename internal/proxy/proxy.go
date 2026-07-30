@@ -42,7 +42,7 @@ func NewServiceProxy(name, baseURL string) (*ServiceProxy, error) {
 	}
 
 	// Error handler for proxy errors
-	p.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+	p.ErrorHandler = func(w http.ResponseWriter, _ *http.Request, err error) {
 		log.Printf("proxy error for %s: %v", name, err)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadGateway)
