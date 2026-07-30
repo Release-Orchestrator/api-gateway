@@ -9,9 +9,9 @@ import (
 
 // Config holds application configuration.
 type Config struct {
-	Port            string
-	UserServiceURL  string
-	OrderServiceURL string
+	Port              string
+	UserServiceURL    string
+	OrderServiceURL   string
 	PaymentServiceURL string
 }
 
@@ -20,9 +20,9 @@ func Load() *Config {
 	_ = godotenv.Load()
 
 	return &Config{
-		Port:             getEnv("PORT", "8080"),
-		UserServiceURL:   getEnv("USER_SERVICE_URL", "http://localhost:8081"),
-		OrderServiceURL:  getEnv("ORDER_SERVICE_URL", "http://localhost:8082"),
+		Port:              getEnv("PORT", "8080"),
+		UserServiceURL:    getEnv("USER_SERVICE_URL", "http://localhost:8081"),
+		OrderServiceURL:   getEnv("ORDER_SERVICE_URL", "http://localhost:8082"),
 		PaymentServiceURL: getEnv("PAYMENT_SERVICE_URL", "http://localhost:8083"),
 	}
 }

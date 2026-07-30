@@ -1,0 +1,110 @@
+services:
+  user-service:
+    image: ghcr.io/release-orchestrator/user-service:latest
+    container_name: api-gw-user
+    ports:
+      - "8081:8080"
+    environment:
+      PORT: "8080"
+      DB_HOST: localhost
+      DB_PORT: "5432"
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_NAME: user_db
+    depends_on:
+      user-db:
+        condition: service_healthy
+
+  user-db:
+    image: postgres:16-alpine
+    container_name: api-gw-user-db
+    environment:
+      POSTGRES_DB: user_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d user_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  order-service:
+    image: ghcr.io/release-orchestrator/order-service:latest
+    container_name: api-gw-order
+    ports:
+      - "8082:8080"
+    environment:
+      PORT: "8080"
+      DB_HOST: localhost
+      DB_PORT: "5433"
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_NAME: order_db
+      USER_SERVICE_URL: "http://user-service:8080"
+      PAYMENT_SERVICE_URL: "http://payment-service:8080"
+    depends_on:
+      order-db:
+        condition: service_healthy
+
+  order-db:
+    image: postgres:16-alpine
+    container_name: api-gw-order-db
+    environment:
+      POSTGRES_DB: order_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d order_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  payment-service:
+    image: ghcr.io/release-orchestrator/payment-service:latest
+    container_name: api-gw-payment
+    ports:
+      - "8083:8080"
+    environment:
+      PORT: "8080"
+      DB_HOST: localhost
+      DB_PORT: "5434"
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_NAME: payment_db
+    depends_on:
+      payment-db:
+        condition: service_healthy
+
+  payment-db:
+    image: postgres:16-alpine
+    container_name: api-gw-payment-db
+    environment:
+      POSTGRES_DB: payment_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d payment_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api-gateway:
+    build: .
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      USER_SERVICE_URL: "http://user-service:8080"
+      ORDER_SERVICE_URL: "http://order-service:8080"
+      PAYMENT_SERVICE_URL: "http://payment-service:8080"
+    depends_on:
+      - user-service
+      - order-service
+      - payment-service
