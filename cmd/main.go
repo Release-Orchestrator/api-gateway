@@ -14,6 +14,7 @@ import (
 
 	"github.com/Release-Orchestrator/api-gateway/internal/config"
 	"github.com/Release-Orchestrator/api-gateway/internal/handler"
+	"github.com/Release-Orchestrator/api-gateway/internal/middleware"
 	"github.com/Release-Orchestrator/api-gateway/internal/proxy"
 )
 
@@ -35,6 +36,13 @@ func main() {
 		log.Fatalf("failed to create payment proxy: %v", err)
 	}
 
+	authProxy, err := proxy.NewServiceProxy("auth-service", cfg.AuthServiceURL)
+	if err != nil {
+		log.Fatalf("failed to create auth proxy: %v", err)
+	}
+
+	authValidator := middleware.NewAuthValidator(cfg.AuthServiceURL)
+
 	r := gin.Default()
 
 	healthHandler := handler.NewHealthHandler()
@@ -42,9 +50,15 @@ func main() {
 
 	api := r.Group("/api/v1")
 	{
-		api.Any("/users/*path", gin.WrapH(userProxy))
-		api.Any("/orders/*path", gin.WrapH(orderProxy))
-		api.Any("/payments/*path", gin.WrapH(paymentProxy))
+		api.Any("/auth/*path", gin.WrapH(authProxy))
+
+		protected := api.Group("")
+		protected.Use(authValidator.Middleware())
+		{
+			protected.Any("/users/*path", gin.WrapH(userProxy))
+			protected.Any("/orders/*path", gin.WrapH(orderProxy))
+			protected.Any("/payments/*path", gin.WrapH(paymentProxy))
+		}
 	}
 
 	srv := &http.Server{

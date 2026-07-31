@@ -13,6 +13,7 @@ type Config struct {
 	UserServiceURL    string
 	OrderServiceURL   string
 	PaymentServiceURL string
+	AuthServiceURL    string
 }
 
 // Load reads configuration from environment variables.
@@ -24,6 +25,7 @@ func Load() *Config {
 		UserServiceURL:    getEnv("USER_SERVICE_URL", "http://localhost:8081"),
 		OrderServiceURL:   getEnv("ORDER_SERVICE_URL", "http://localhost:8082"),
 		PaymentServiceURL: getEnv("PAYMENT_SERVICE_URL", "http://localhost:8083"),
+		AuthServiceURL:    getEnv("AUTH_SERVICE_URL", "http://localhost:8084"),
 	}
 }
 
