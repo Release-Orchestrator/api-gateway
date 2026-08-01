@@ -55,8 +55,11 @@ func main() {
 		protected := api.Group("")
 		protected.Use(authValidator.Middleware())
 		{
+			protected.Any("/users", gin.WrapH(userProxy))
 			protected.Any("/users/*path", gin.WrapH(userProxy))
+			protected.Any("/orders", gin.WrapH(orderProxy))
 			protected.Any("/orders/*path", gin.WrapH(orderProxy))
+			protected.Any("/payments", gin.WrapH(paymentProxy))
 			protected.Any("/payments/*path", gin.WrapH(paymentProxy))
 		}
 	}

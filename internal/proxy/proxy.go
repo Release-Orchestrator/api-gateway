@@ -35,9 +35,9 @@ func NewServiceProxy(name, baseURL string) (*ServiceProxy, error) {
 		req.Host = target.Host
 		req.URL.Scheme = target.Scheme
 		req.URL.Host = target.Host
-		req.URL.Path = singleJoiningSlash(target.Path, req.URL.Path)
+		req.URL.Path = normalizeTrailingSlash(singleJoiningSlash(target.Path, req.URL.Path))
 		if req.URL.RawPath != "" {
-			req.URL.RawPath = singleJoiningSlash(target.Path, req.URL.RawPath)
+			req.URL.RawPath = normalizeTrailingSlash(singleJoiningSlash(target.Path, req.URL.RawPath))
 		}
 	}
 
@@ -83,4 +83,13 @@ func singleJoiningSlash(a, b string) string {
 		return a + "/" + b
 	}
 	return a + b
+}
+
+// normalizeTrailingSlash removes a trailing slash so backends that register
+// exact routes do not redirect and create an infinite redirect loop.
+func normalizeTrailingSlash(p string) string {
+	if len(p) > 1 && strings.HasSuffix(p, "/") {
+		return strings.TrimSuffix(p, "/")
+	}
+	return p
 }

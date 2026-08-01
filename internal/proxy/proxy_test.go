@@ -147,3 +147,58 @@ func TestSingleJoiningSlash(t *testing.T) {
 		}
 	}
 }
+
+func TestNormalizeTrailingSlash(t *testing.T) {
+	tests := []struct {
+		in, expected string
+	}{
+		{"/api/v1/users/", "/api/v1/users"},
+		{"/api/v1/users", "/api/v1/users"},
+		{"/", "/"},
+		{"", ""},
+		{"/api/v1/auth/login", "/api/v1/auth/login"},
+	}
+
+	for _, tt := range tests {
+		result := normalizeTrailingSlash(tt.in)
+		if result != tt.expected {
+			t.Errorf("normalizeTrailingSlash(%q) = %q, want %q", tt.in, result, tt.expected)
+		}
+	}
+}
+
+func TestServiceProxy_StripsTrailingSlash(t *testing.T) {
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(fmt.Sprintf(`{"path":%q}`, r.URL.Path)))
+	}))
+	defer backend.Close()
+
+	proxy, err := NewServiceProxy("test-service", backend.URL)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	frontend := httptest.NewServer(proxy)
+	defer frontend.Close()
+
+	resp, err := http.Get(frontend.URL + "/api/v1/users/")
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
+	}
+
+	var result struct {
+		Path string `json:"path"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("expected valid JSON, got %v", err)
+	}
+	if result.Path != "/api/v1/users" {
+		t.Fatalf("expected backend path /api/v1/users, got %q", result.Path)
+	}
+}
