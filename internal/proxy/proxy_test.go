@@ -170,7 +170,7 @@ func TestNormalizeTrailingSlash(t *testing.T) {
 func TestServiceProxy_StripsTrailingSlash(t *testing.T) {
 	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(fmt.Sprintf(`{"path":%q}`, r.URL.Path)))
+		_, _ = fmt.Fprintf(w, `{"path":%q}`, r.URL.Path)
 	}))
 	defer backend.Close()
 
