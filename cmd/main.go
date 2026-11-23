@@ -11,11 +11,14 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/Release-Orchestrator/api-gateway/internal/config"
 	"github.com/Release-Orchestrator/api-gateway/internal/handler"
 	"github.com/Release-Orchestrator/api-gateway/internal/middleware"
 	"github.com/Release-Orchestrator/api-gateway/internal/proxy"
+
+	sharedmetrics "github.com/Release-Orchestrator/pkg/metrics"
 )
 
 func main() {
@@ -45,8 +48,12 @@ func main() {
 
 	r := gin.Default()
 
+	r.Use(sharedmetrics.HTTPMiddleware("api-gateway"))
+
 	healthHandler := handler.NewHealthHandler()
 	healthHandler.RegisterRoutes(r)
+
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	api := r.Group("/api/v1")
 	{
